@@ -1,0 +1,162 @@
+---
+title: "assignment-1"
+author: "Oksana Rebrik"
+date: "02 11 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+##Exercise 1
+
+C'est ma premiere experience d'utilisation Rstudio et ce n'est pas si facile qu'il y parait.
+
+##Exercise 2
+
+```{r}
+possible_outcomes <- c(0, 1, 2, 3, 4, 5)
+outcome_probabilities <- c(0.1, 0.5, 0.2, 0.1, 0.05, 0.05)
+n_data_points <- 400
+set.seed(1)
+fake_data_points <- sample(possible_outcomes, n_data_points, replace=T, prob=outcome_probabilities)
+set.seed(NULL)
+fake_data_set <- tibble::data_frame(`Fake measurement`=fake_data_points)
+```
+
+```{r}
+ggplot2::ggplot(fake_data_set, ggplot2::aes(x=`Fake measurement`)) +
+ggplot2::geom_histogram(bins=5, colour="black", fill="lightgrey")
+```
+
+
+ Statement 2. This line assigns a variable **outcome_probabilities**. Similar to **possible_outcomes**. It uses numbers as well as the previous one, and create a vector with the same function _c()_. I have printed "outcome_probabilities" in the console and it answered to me with a vector of these numbers.
+Also, the name of vector keens to the idea of probabilities of some events.
+
+ Statement 3. We initialise the value. We give the **n_data_points** its initial value of a single number.  I have print n_data_points in the console. I think that it is responsible for some kind of numbers, answering for the question "how much?", because in math N was a common name for numbers.
+
+
+ Statement 4. According to R help seed is some kind of key to random number generation in R. I have switched number of "seed" for 2, 3, 4 and 777 and it affected on **fake_data_points** by changing numbers within, but for each *seed* numbers were unique and appeared in the same order. It looks like a controlled random. set.seed(Null) make random work again in R because it destroys the key.
+
+ Statement 5. As I understood it with the help of ?sample and www.rexamples.com, which are very similar, sample toke numbers from **possible_outcomes**, 400 times (as it was recorded in n_data_points), with the probability of each number **outcome_probabilities**. 0 with prob 0.1, 1 with 0.5, 2 with 0.2 and so on. Replace allows to take an element from vector more than once ( http://www.rexamples.com/14/Sample() ). With replace=F R does not work at all, because it is impossible to take 400 times 5 numbers without repeating.
+
+ Statement 6. It is clear from ?data_frame, that data_frame is a specific version of *data.frame*, but a little bit less clever. Obviously, somewhere that will be a dealbreaker, but for our data, they work the same way.
+
+##Exercise 3
+
+```{r}
+source("functions.R")
+```
+
+###Sub-exercise 3-a
+```{r}
+print(sum_column(iris, "Sepal.Length"))
+print(sum_column(iris, "Species"))
+print(sum_column(warpbreaks, "breaks"))
+```
+
+###Sub-exercise 3-b
+```{r}
+print(my_sum(iris$Sepal.Length))
+print(my_sum(iris$Species))
+print(my_sum(warpbreaks$breaks))
+```
+###Sub-exercise 3-c
+```{r}
+print(sum_divided_by(iris$Sepal.Length, 12))
+print(sum_divided_by(iris$Species, 22))
+print(sum_divided_by(iris$Sepal.Length, "Not numeric"))
+print(sum_divided_by(warpbreaks$breaks, -12))
+```
+
+###Sub-exercise 3-d
+```{r}
+print(my_mean(iris$Sepal.Length))
+print(my_mean(iris$Species))
+print(my_mean(warpbreaks$breaks))
+```
+##Exercise 4: Working with ggplot
+```{r}
+print(grouped_violin_plot(iris, "Sepal.Length", "Species"))
+```
+###Sub-exercise 4-b
+```{r}
+p <- grouped_violin_plot(iris, "Sepal.Length", "Species") +
+    ggplot2::scale_fill_brewer(palette="Dark2")+
+    ggplot2::labs(title="Iris data")
+print(p)
+
+```
+##Exercise 5: Permutation tests
+###Sub-exercise 5-a
+```{r}
+difference_in_medians(iris, "Sepal.Width", "Species", "versicolor", "virginica")
+difference_in_medians(iris, "Sepal.Width", "Species", "virginica", "virginica")
+```
+
+
+###Sub-exercise 5-b
+```{r}
+iris$Sepal.Width[1:10]
+if(!exists(".Random.seed")) set.seed(NULL)
+previous_seed <- .Random.seed
+set.seed(1)
+randomize(iris, "Sepal.Width")$Sepal.Width[1:10]
+randomize(iris, "Species")$Species[1:10]
+randomize(iris, "Species") 
+
+```
+The function works well in previous examples, but in the last line of chunk one, it is ignored by R. I tried to rebuild it. No effect.
+
+###Sub-exercise 5-c
+```{r}
+if(!exists(".Random.seed")) set.seed(NULL)
+previous_seed <- .Random.seed
+set.seed(1)
+ptest_1 <- permutation_twogroups(iris, "Sepal.Width", "Species", "versicolor",
+"virginica", difference_in_medians, n_samples=10)
+ptest_2 <- permutation_twogroups(iris, "Sepal.Width", "Species", "versicolor",
+"virginica", difference_in_medians, n_samples=10)
+ptest_3 <- permutation_twogroups(randomize(iris, "Sepal.Width"), "Sepal.Width",
+"Species", "versicolor", "virginica",
+difference_in_medians, n_samples=10)
+set.seed(previous_seed)
+print(ptest_1)
+print(ptest_2)
+print(ptest_3)
+print(ptest_3$observed)
+print(ptest_3[["observed"]])
+```
+
+###Sub-exercise 5-d
+```{r}
+#ptest_1 <- permutation_twogroups(iris, "Species", "Sepal.Width", "versicolor",
+#"virginica", difference_in_medians, n_samples=10)
+```
+An order is important for my function because it asks for numeric data in the stage of calculation **difference_in_medians** , _var_ was the name of a column with numbers.
+
+###Sub-exercise 5-e
+```{r, cache=T}
+if(!exists(".Random.seed")) set.seed(NULL)
+previous_seed <- .Random.seed
+set.seed(1)
+ptest <- permutation_twogroups(iris, "Sepal.Width", "Species", "versicolor",
+"virginica", difference_in_medians)
+set.seed(previous_seed)
+```
+
+```{r}
+ptest_d <- tibble::as_tibble(ptest["permuted"])
+
+
+g <-
+  ggplot2::ggplot(ptest_d) +
+  ggplot2::geom_histogram(ggplot2::aes(permuted), fill="orange", alpha = 0.7, ) +
+  ggplot2::geom_vline(xintercept=ptest[["observed"]], color="steelblue")
+g
+
+```
+
+We can reject the null hypothesis(if we had one) in favour of the alternative since the observed value is very different from the random. Almost all random observations are situated near _0_. Picture is not really beautiful.
